@@ -9,7 +9,7 @@
     <h1>Edit Message</h1>
     <form id="edit-form">
         <textarea id="new-message" rows="4" cols="50" placeholder="Enter your new message here"></textarea><br>
-        <button type="submit">Update Mesage</button>
+        <button type="submit">Update Message</button>
     </form>
     <div id="status"></div>
     <script>
@@ -31,7 +31,12 @@
                 'Content-Type': 'application/json'
             };
             fetch(apiUrl, { headers })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch file SHA');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const sha = data.sha;
                     const content = encodeToBase64(newMessage);
@@ -48,6 +53,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Update response:', data);
                         if (data.content) {
                             document.getElementById('status').innerText = 'Message updated successfully!';
                         } else {
