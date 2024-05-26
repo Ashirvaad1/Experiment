@@ -22,15 +22,19 @@
             const branch = 'main';
             const token = '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';
             const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+            function encodeToBase64(str) {
+                return btoa(unescape(encodeURIComponent(str)));
+            }
             const headers = {
                 'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
             };
             fetch(apiUrl, { headers })
                 .then(response => response.json())
                 .then(data => {
                     const sha = data.sha;
-                    const content = btoa(unescape(encodeURIComponent(newMessage)));
+                    const content = encodeToBase64(newMessage);
                     const body = {
                         message: 'Update message.txt',
                         content: content,
@@ -44,7 +48,11 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        document.getElementById('status').innerText = 'Message updated successfully!';
+                        if (data.content) {
+                            document.getElementById('status').innerText = 'Message updated successfully!';
+                        } else {
+                            throw new Error('Failed to update message');
+                        }
                     })
                     .catch(error => {
                         document.getElementById('status').innerText = 'Error updating message: ' + error;
