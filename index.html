@@ -3,28 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Message from File</title>
+    <title>Edit Message File</title>
 </head>
 <body>
-    <h1>Message from the Repository</h1>
-    <div id="message-container">Loading message...</div>
+    <h1>Edit Message</h1>
+    <form id="edit-form">
+        <textarea id="new-message" rows="4" cols="50" placeholder="Enter your new message here"></textarea><br>
+        <button type="submit">Update Message</button>
+    </form>
+    <div id="status"></div>
     <script>
-        function fetchMessage() {
-            fetch('message.txt')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok ' + response.statusText);
-                    }
-                    return response.text();
-                })
+        document.getElementById('edit-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const newMessage = document.getElementById('new-message').value;
+            const username = 'your-username';
+            const repo = 'your-repository';
+            const path = 'message.txt';
+            const branch = 'main';
+            const token = 'YOUR_PERSONAL_ACCESS_TOKEN';
+            const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+            const headers = {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            };
+            fetch(apiUrl, { headers })
+                .then(response => response.json())
                 .then(data => {
-                    document.getElementById('message-container').innerText = data;
+                    const sha = data.sha;
+                    const content = btoa(unescape(encodeURIComponent(newMessage)));
+                    const body = {
+                        message: 'Update message.txt',
+                        content: content,
+                        sha: sha,
+                        branch: branch
+                    };
+                    fetch(apiUrl, {
+                        method: 'PUT',
+                        headers: headers,
+                        body: JSON.stringify(body)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('status').innerText = 'Message updated successfully!';
+                    })
+                    .catch(error => {
+                        document.getElementById('status').innerText = 'Error updating message: ' + error;
+                    });
                 })
                 .catch(error => {
-                    document.getElementById('message-container').innerText = 'Error: ' + error;
+                    document.getElementById('status').innerText = 'Error fetching file SHA: ' + error;
                 });
-        }
-      window.onload = fetchMessage;
+        });
     </script>
 </body>
 </html>
